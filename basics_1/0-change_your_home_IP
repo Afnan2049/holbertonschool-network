@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Configures local host resolution mappings safely for Docker/jail environments
+
+# 1-modify localhost in-memory to 127.0.0.2
+CONFIGURED_HOSTS=$(sed -E 's/127\.0\.0\.1([[:space:]]+)localhost/127.0.0.2\1localhost/g' /etc/hosts)
+echo "$CONFIGURED_HOSTS" | sudo tee /etc/hosts > /dev/null || echo "$CONFIGURED_HOSTS" > /etc/hosts
+
+# 2-append facebook.com resolution if it doesn't already exist
+if ! grep -q "facebook.com" /etc/hosts; then
+    echo -e "8.8.8.8\tfacebook.com" | sudo tee -a /etc/hosts > /dev/null || echo -e "8.8.8.8\tfacebook.com" >> /etc/hosts
+fi
+
+# 3-revert localhost back to 127.0.0.1
+REVERTED_HOSTS=$(sed -E 's/127\.0\.0.2([[:space:]]+)localhost/127.0.0.1\1localhost/g' /etc/hosts)
+echo "$REVERTED_HOSTS" | sudo tee /etc/hosts > /dev/null || echo "$REVERTED_HOSTS" > /etc/hosts
